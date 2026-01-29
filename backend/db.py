@@ -2,4 +2,5 @@
 # Currently acts as a placeholder for future MySQL integration
 
 def connect_db():
-    return "Database connection will be implemented"
+    #placeholder for database connection
+    return None
