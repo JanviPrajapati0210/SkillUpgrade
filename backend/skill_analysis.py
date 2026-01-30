@@ -1,16 +1,25 @@
 
-industry_skills = ["Python", "SQL", "Data Structures", "Machine Learning"]
+industry_skills = {
+    "Python": "Learn basics, OOP, and libraries",
+    "SQL": "Practice joins, queries, and indexing",
+    "Data Structures": "Focus on arrays, stacks, queues",
+    "Machine Learning": "Start with regression and classification"
+}
 
 def analyze_skills(data):
     user_skills = data.get("skills", [])
 
-    missing_skills = []
-    for skill in industry_skills:
+    missing = []
+    roadmap = {}
+
+    for skill, plan in industry_skills.items():
         if skill not in user_skills:
-            missing_skills.append(skill)
+            missing.append(skill)
+            roadmap[skill] = plan
 
     return {
-        "user_skills": user_skills,
-        "missing_skills": missing_skills,
-        "recommendation": "Focus on missing skills to improve employability"
+        "missing_skills": missing,
+        "roadmap": roadmap,
+        "message": "Personalized learning roadmap generated"
     }
+
