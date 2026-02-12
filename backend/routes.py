@@ -9,15 +9,25 @@ api = Blueprint("api", __name__)
 @api.route("/register", methods=["POST"])
 def register():
     logger.info("User registration attempted")
-    return register_user(request.json)
+
+    response, status_code = register_user(request.json)
+    return jsonify(response), status_code
+
 
 @api.route("/login", methods=["POST"])
 def login():
     logger.info("User login attempted")
-    return login_user(request.json)
+
+    response, status_code = login_user(request.json)
+    return jsonify(response), status_code
+
 
 @api.route("/analyze-skills", methods=["POST"])
 @jwt_required()
 def analyze():
-    logger.info("Skill analysis requested")
-    return jsonify(analyze_skills(request.json))
+    current_user = get_jwt_identity()
+    logger.info(f"Skill analysis requested by {current_user}")
+
+    result = analyze_skills(request.json)
+
+    return jsonify(result), 200
