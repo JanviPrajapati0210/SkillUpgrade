@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - SkillUpgrade</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="light">
+<nav class="navbar">
+    <div class="logo">SkillUpgrade</div>
+
+    <div class="nav-right">
+        <button onclick="toggleTheme()" class="theme-btn">
+            🌙 / ☀
+        </button>
+        <button onclick="logout()">Logout</button>
+    </div>
+</nav>
+<div class="card">
+    <h2>Login</h2>
+    <input type="email" id="email" placeholder="Email"><br><br>
+    <input type="password" id="password" placeholder="Password"><br><br>
+    <button onclick="login()">Login</button>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/theme.js"></script>
+</body>
+</html>
