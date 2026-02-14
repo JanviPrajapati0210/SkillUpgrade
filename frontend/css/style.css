@@ -50,3 +50,33 @@ button {
 body.dark button {
   background: var(--dark-accent);
 }
+.container {
+    display: flex;
+}
+
+.sidebar {
+    width: 250px;
+    min-height: 100vh;
+    padding: 20px;
+    background: #cdb4db;
+}
+
+.main {
+    flex: 1;
+    padding: 30px;
+}
+
+.progress-bar {
+    height: 20px;
+    background: #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: #a2d2ff;
+    transition: width 1s ease-in-out;
+}
