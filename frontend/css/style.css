@@ -1,0 +1,52 @@
+:root {
+  --light-bg: #fdf6ff;
+  --light-card: #ffffff;
+  --light-text: #3a3a3a;
+  --light-accent: #cdb4db;
+
+  --dark-bg: #1e1e2f;
+  --dark-card: #2c2c3f;
+  --dark-text: #f3f3f3;
+  --dark-accent: #a2d2ff;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI';
+  transition: 0.3s ease;
+}
+
+body.light {
+  background: var(--light-bg);
+  color: var(--light-text);
+}
+
+body.dark {
+  background: var(--dark-bg);
+  color: var(--dark-text);
+}
+
+.card {
+  background: var(--light-card);
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  margin: 20px;
+}
+
+body.dark .card {
+  background: var(--dark-card);
+}
+
+button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: var(--light-accent);
+  font-weight: bold;
+}
+
+body.dark button {
+  background: var(--dark-accent);
+}
