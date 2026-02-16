@@ -1,21 +1,29 @@
-const API = "http://127.0.0.1:5000/api";
+const API = "http://127.0.0.1:5000";
 
-async function login() {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+function login() {
+  fetch(`${API}/login`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      email: email.value,
+      password: password.value
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    localStorage.setItem("token", data.access_token);
+    window.location = "dashboard.html";
+  });
+}
 
-    const response = await fetch(`${API}/login`, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({email, password})
-    });
-
-    const data = await response.json();
-
-    if(data.access_token){
-        localStorage.setItem("token", data.access_token);
-        window.location.href = "dashboard.html";
-    } else {
-        alert(data.message);
-    }
+function register() {
+  fetch(`${API}/register`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      name: name.value,
+      email: email.value,
+      password: password.value
+    })
+  }).then(() => window.location = "login.html");
 }

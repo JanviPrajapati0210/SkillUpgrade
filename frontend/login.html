@@ -1,28 +1,52 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" data-theme="light">
 <head>
-    <title>Login - SkillUpgrade</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Skillupgrade</title>
     <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="light">
-<nav class="navbar">
-    <div class="logo">SkillUpgrade</div>
+<body>
 
-    <div class="nav-right">
-        <button onclick="toggleTheme()" class="theme-btn">
-            🌙 / ☀
-        </button>
-        <button onclick="logout()">Logout</button>
+    <nav class="navbar">
+        <div class="nav-left">
+            <div class="logo">Skill<span>upgrade</span></div>
+            <button onclick="location.href='index.html'" class="btn-home">🏠 Home</button>
+        </div>
+        <div class="nav-right">
+            <label class="theme-switch">
+                <input type="checkbox" id="theme-toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </nav>
+
+    <div class="login-container">
+        <div class="login-card">
+            <div class="auth-header">
+                <h2>Welcome Back</h2>
+                <p>Enter your credentials to access your dashboard.</p>
+            </div>
+
+            <form onsubmit="window.location.href='dashboard.html'; return false;">
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" placeholder="email@example.com" required>
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn-auth">Sign In</button>
+            </form>
+
+            <div class="auth-footer">
+                <p>New here? <a href="register.html">Create an account</a></p>
+            </div>
+        </div>
     </div>
-</nav>
-<div class="card">
-    <h2>Login</h2>
-    <input type="email" id="email" placeholder="Email"><br><br>
-    <input type="password" id="password" placeholder="Password"><br><br>
-    <button onclick="login()">Login</button>
-</div>
 
-<script src="js/api.js"></script>
-<script src="js/theme.js"></script>
+    <script src="js/theme.js"></script>
 </body>
 </html>

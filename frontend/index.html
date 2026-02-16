@@ -1,40 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
-    <title>SkillUpgrade | Learn Smarter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skillupgrade | Level Up Now</title>
     <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
 </head>
-
-<body class="light">
+<body>
 
     <nav class="navbar">
-        <h2>SkillUpgrade</h2>
-        <div>
-            <button onclick="toggleTheme()">Toggle Theme</button>
-            <a href="login.html"><button>Login</button></a>
-            <a href="register.html"><button>Register</button></a>
+        <div class="logo">Skill<span>upgrade</span></div>
+        <div class="nav-right">
+            <label class="theme-switch">
+                <input type="checkbox" id="theme-toggle">
+                <span class="slider"></span>
+            </label>
+            <a href="login.html" class="nav-link">Sign In</a>
+            <button onclick="location.href='dashboard.html'" class="btn-primary">Get Started</button>
         </div>
     </nav>
 
-    <section class="hero">
-        <div class="card hero-card">
-            <h1>Upgrade Your Skills 🚀</h1>
-            <p>
-                Discover your skill gaps, get personalized learning roadmaps,
-                and track your progress — all in one place.
-            </p>
-
-            <div class="hero-actions">
-                <a href="register.html">
-                    <button>Get Started</button>
-                </a>
-                <a href="login.html">
-                    <button>Already a User?</button>
-                </a>
+    <main class="hero">
+        <div class="hero-text">
+            <span class="pill-note">🚀 Your Future Starts Here</span>
+            <h1>Level up your <br><span class="vivid-gradient">Career Goals.</span></h1>
+            <p>The most colorful way to master new skills. Join the community and start your journey today.</p>
+            
+            <div class="hero-btns">
+                <button onclick="location.href='dashboard.html'" class="btn-large">Go to Dashboard →</button>
             </div>
         </div>
-    </section>
+
+        <div class="hero-visual">
+            <div class="glass-container">
+                <div class="floating-item one">✨ Top Rated</div>
+                <div class="floating-item two">🔥 Trending</div>
+                <div class="floating-item three">🏆 Certified</div>
+            </div>
+        </div>
+    </main>
 
     <script src="js/theme.js"></script>
 </body>
