@@ -77,3 +77,4 @@ def save_progress():
     except Exception as e:
         logger.error(str(e))
         return jsonify({"error": "Database error"}), 500
+
