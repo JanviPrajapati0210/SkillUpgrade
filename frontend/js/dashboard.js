@@ -1,147 +1,61 @@
-/* ================================
-   SkillUpgrade – Dashboard Logic
-   ================================ */
+fetch("http://127.0.0.1:5000/analyze-skills", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${localStorage.getItem("token")}`
+  },
+  body: JSON.stringify({})   // send user data if required later
+})
+.then(res => res.json())
+.then(data => {
 
-/* ---------- API BASE URL ---------- */
-const API_BASE = "http://127.0.0.1:5000";
+  const currentDiv = document.getElementById("currentSkills");
+  const missingDiv = document.getElementById("missingSkills");
 
-/* ---------- ELEMENT REFERENCES ---------- */
-const domainSelect = document.getElementById("jobDomain");
-const titleSelect = document.getElementById("jobTitle");
-const skillsInput = document.getElementById("skills");
-const resultBox = document.getElementById("result");
+  let completed = data.current_skills.length;
+  let total = completed + data.missing_skills.length;
 
-/* ---------- THEME TOGGLE ---------- */
-function toggleTheme() {
-  document.body.classList.toggle("dark");
-
-  // Save preference
-  localStorage.setItem(
-    "theme",
-    document.body.classList.contains("dark") ? "dark" : "light"
-  );
-}
-
-/* ---------- LOAD SAVED THEME ---------- */
-(function loadTheme() {
-  const savedTheme = localStorage.getItem("theme");
-  if (savedTheme === "dark") {
-    document.body.classList.add("dark");
-  }
-})();
-
-/* ---------- LOAD JOB DOMAINS ---------- */
-async function loadDomains() {
-  try {
-    const res = await fetch(`${API_BASE}/domains`);
-    const data = await res.json();
-
-    domainSelect.innerHTML = `<option value="">Select Job Domain</option>`;
-
-    data.domains.forEach(domain => {
-      const option = document.createElement("option");
-      option.value = domain;
-      option.textContent = domain;
-      domainSelect.appendChild(option);
-    });
-
-  } catch (error) {
-    alert("Failed to load job domains");
-  }
-}
-
-/* ---------- LOAD JOB TITLES ---------- */
-async function loadTitles() {
-  const domain = domainSelect.value;
-  titleSelect.innerHTML = `<option value="">Loading...</option>`;
-
-  if (!domain) return;
-
-  try {
-    const res = await fetch(`${API_BASE}/titles/${domain}`);
-    const data = await res.json();
-
-    titleSelect.innerHTML = `<option value="">Select Job Title</option>`;
-
-    data.titles.forEach(title => {
-      const option = document.createElement("option");
-      option.value = title;
-      option.textContent = title;
-      titleSelect.appendChild(option);
-    });
-
-  } catch (error) {
-    alert("Failed to load job titles");
-  }
-}
-
-/* ---------- ANALYZE SKILLS ---------- */
-async function analyzeSkills() {
-  const domain = domainSelect.value;
-  const title = titleSelect.value;
-  const userSkills = skillsInput.value
-    .split(",")
-    .map(skill => skill.trim())
-    .filter(skill => skill !== "");
-
-  if (!domain || !title || userSkills.length === 0) {
-    alert("Please fill all fields");
-    return;
-  }
-
-  const payload = {
-    job_domain: domain,
-    job_title: title,
-    skills: userSkills
-  };
-
-  resultBox.innerHTML = "🔍 Analyzing your skills...";
-
-  try {
-    const res = await fetch(`${API_BASE}/analyze`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await res.json();
-    renderResult(data);
-
-  } catch (error) {
-    resultBox.innerHTML = "❌ Server error. Please try again.";
-  }
-}
-
-/* ---------- RENDER RESULT ---------- */
-function renderResult(data) {
-  resultBox.innerHTML = "";
-
-  const missing = data.missing_skills;
-  const roadmap = data.roadmap;
-
-  if (missing.length === 0) {
-    resultBox.innerHTML = `
-      <h3>🎉 Congratulations!</h3>
-      <p>You already meet the required skills for this role.</p>
+  // ✅ CURRENT SKILLS
+  data.current_skills.forEach(skill => {
+    currentDiv.innerHTML += `
+      <div class="skill-card">✅ ${skill}</div>
     `;
-    return;
-  }
 
-  let html = `<h3>📌 Missing Skills</h3><ul>`;
-
-  missing.forEach(skill => {
-    html += `<li><strong>${skill}</strong> – ${roadmap[skill]}</li>`;
+    // Save 100% progress for acquired skills
+    saveProgress(skill, 100);
   });
 
-  html += `</ul>`;
-  resultBox.innerHTML = html;
-}
+  // ❌ MISSING SKILLS
+  data.missing_skills.forEach(skill => {
+    missingDiv.innerHTML += `
+      <div class="skill-card">
+        ❌ ${skill}<br>
+        <a href="https://www.coursera.org/search?query=${skill}" target="_blank">
+          Find Course
+        </a>
+      </div>
+    `;
 
-/* ---------- LOGOUT ---------- */
-function logout() {
-  localStorage.clear();
-  window.location.href = "login.html";
-}
+    // Save 0% progress for missing skills
+    saveProgress(skill, 0);
+  });
 
-/* ---------- INITIAL LOAD ---------- */
-loadDomains();
+  // 📊 OVERALL PROGRESS
+  let progress = Math.round((completed / total) * 100);
+  document.getElementById("progressBar").value = progress;
+  document.getElementById("progressText").innerText = progress + "%";
+});
+
+function saveProgress(skill, progress) {
+  fetch("http://127.0.0.1:5000/save-progress", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`
+    },
+    body: JSON.stringify({
+      skill: skill,
+      progress: progress
+    })
+  });
+}
