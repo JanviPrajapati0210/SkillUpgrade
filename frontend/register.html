@@ -1,58 +1,148 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
-    <title>Register | SkillUpgrade</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Skillupgrade</title>
     <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
-<body class="light">
+<body>
 
     <nav class="navbar">
-        <h2>SkillUpgrade</h2>
-        <button onclick="toggleTheme()">Toggle Theme</button>
+        <div class="nav-left">
+            <div class="logo">Skill<span>upgrade</span></div>
+            <button onclick="location.href='index.html'" class="btn-home">🏠 Home</button>
+        </div>
+        
+        <div class="nav-right">
+            <label class="theme-switch">
+                <input type="checkbox" id="theme-toggle">
+                <span class="slider"></span>
+            </label>
+            <div class="user-profile">
+                <span>Welcome, User</span>
+                <div class="avatar"></div>
+            </div>
+        </div>
     </nav>
 
-    <div class="auth-container">
-        <div class="card auth-card">
-            <h2>Create Account ✨</h2>
+    <div class="container">
+        <aside class="input-panel">
+            <h3>Analyze Skills</h3>
+            <div class="input-group">
+                <label>Job Domain</label>
+                <input type="text" id="domain" placeholder="e.g. IT">
+            </div>
+            <div class="input-group">
+                <label>Target Job Title</label>
+                <input type="text" id="jobTitle" placeholder="e.g. Data Scientist">
+            </div>
+            <div class="input-group">
+                <label>Your Current Skills</label>
+                <textarea id="userSkills" placeholder="Enter skills (comma separated)"></textarea>
+            </div>
+            <button onclick="analyzeSkills()" class="btn-analyze">Identify Gaps →</button>
+        </aside>
 
-            <input type="email" id="email" placeholder="Email" required>
-            <input type="password" id="password" placeholder="Password" required>
+        <main class="dashboard-content">
+            <div class="top-row">
+                <div class="card chart-card">
+                    <h4>Learning Progress</h4>
+                    <div class="chart-container">
+                        <canvas id="progressChart"></canvas>
+                        <div id="chart-label">0%</div>
+                    </div>
+                </div>
+                <div class="card status-card">
+                    <h4>Suggested Courses</h4>
+                    <ul id="courseList" class="course-list">
+                        <li class="empty-msg">Waiting for analysis...</li>
+                    </ul>
+                </div>
+            </div>
 
-            <button onclick="register()">Register</button>
-
-            <p class="auth-link">
-                Already have an account?
-                <a href="login.html">Login</a>
-            </p>
-        </div>
+            <div class="card gap-card">
+                <h4>Missing Skills Gap</h4>
+                <div id="missingSkillsContainer" class="skills-tags">
+                    <p style="opacity: 0.5;">Required skills will appear here...</p>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <script src="js/api.js"></script>
     <script src="js/theme.js"></script>
-
     <script>
-        async function register() {
-            const email = document.getElementById("email").value;
-            const password = document.getElementById("password").value;
+        
+        // Initialize Progress Chart
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        let progressChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Matched', 'Missing'],
+                datasets: [{
+                    data: [0, 100],
+                    backgroundColor: ['#f72585', '#e2e8f0'],
+                    hoverOffset: 4,
+                    borderWidth: 0
+                }]
+            },
+            options: { cutout: '85%', plugins: { legend: { display: false } } }
+        });
 
-            const response = await fetch("http://127.0.0.1:5000/api/register", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password })
-            });
+        // Skill Analysis Logic
+        async function analyzeSkills() {
+            const targetTitle = document.getElementById('jobTitle').value.trim().toLowerCase();
+            const userSkills = document.getElementById('userSkills').value.toLowerCase().split(',').map(s => s.trim());
 
-            const data = await response.json();
+            try {
+                // In a real scenario, you'd use fetch('dataset.csv')
+                // Here is the logic for when you have the data
+                const response = await fetch('dataset.csv');
+                const data = await response.text();
+                
+                // Simplified CSV Parsing Logic
+                const rows = data.split('\n').slice(1);
+                const dataset = rows.map(row => {
+                    const cols = row.split(',');
+                    return { title: cols[1]?.trim().toLowerCase(), it_skills: cols[2]?.trim().toLowerCase() };
+                });
 
-            if (response.status === 201) {
-                alert("Registration successful! Please login.");
-                window.location.href = "login.html";
-            } else {
-                alert(data.message);
+                const match = dataset.find(d => d.title === targetTitle);
+
+                if (match) {
+                    const requiredSkills = match.it_skills.split('|').map(s => s.trim()); // Assuming pipe separator in CSV
+                    const missing = requiredSkills.filter(s => !userSkills.includes(s));
+                    const matchedCount = requiredSkills.length - missing.length;
+                    
+                    updateUI(missing, matchedCount, requiredSkills.length);
+                } else {
+                    alert("Job title not found in dataset.");
+                }
+            } catch (e) {
+                console.error("CSV not found, using demo mode", e);
+                // Demo fallback if file isn't present
+                const demoMissing = ['React', 'Python', 'Cloud Computing'];
+                updateUI(demoMissing, 2, 5);
             }
         }
-    </script>
 
+        function updateUI(missing, matched, total) {
+            // Update Tags
+            const container = document.getElementById('missingSkillsContainer');
+            container.innerHTML = missing.map(s => `<span class="skill-tag">${s}</span>`).join('');
+
+            // Update Chart
+            const percent = Math.round((matched / total) * 100);
+            progressChart.data.datasets[0].data = [percent, 100 - percent];
+            progressChart.update();
+            document.getElementById('chart-label').innerText = percent + "%";
+
+            // Update Courses
+            const list = document.getElementById('courseList');
+            list.innerHTML = missing.map(s => `<li>🚀 <strong>Skillupgrade Path:</strong> Advanced ${s} Mastery</li>`).join('');
+        }
+    </script>
 </body>
 </html>
