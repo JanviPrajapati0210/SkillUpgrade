@@ -1,17 +1,7 @@
-/**
- * Local Knowledge Base
- * Acts as a standalone "database" for skill mapping
- */
-const skillDatabase = {
-    "data scientist": ["python", "machine learning", "statistics", "sql", "pandas", "visualization"],
-    "frontend developer": ["html", "css", "javascript", "react", "tailwind", "git"],
-    "backend developer": ["node.js", "express", "postgresql", "api design", "docker", "redis"],
-    "fullstack developer": ["react", "node.js", "mongodb", "javascript", "css", "deployment"],
-    "ui/ux designer": ["figma", "prototyping", "user research", "wireframing", "adobe xd"],
-    "it support": ["networking", "troubleshooting", "active directory", "hardware", "linux"]
-};
+const API = "http://127.0.0.1:5000/api";
 
-// Initialize Progress Chart (Global scope for updates)
+/* ------------------ CHART INIT ------------------ */
+
 const ctx = document.getElementById('progressChart').getContext('2d');
 let progressChart = new Chart(ctx, {
     type: 'doughnut',
@@ -24,80 +14,115 @@ let progressChart = new Chart(ctx, {
             borderWidth: 0
         }]
     },
-    options: { 
-        cutout: '85%', 
+    options: {
+        cutout: '85%',
         plugins: { legend: { display: false } },
-        animation: { duration: 1500 }
+        animation: { duration: 1200 }
     }
 });
 
-/**
- * Main Analysis Logic
- */
-function analyzeSkills() {
-    const jobTitleInput = document.getElementById('jobTitle').value.trim().toLowerCase();
-    const userSkillsInput = document.getElementById('userSkills').value.toLowerCase();
-    
-    // Convert comma-separated string to cleaned array
-    const userSkills = userSkillsInput.split(',').map(s => s.trim()).filter(s => s !== "");
+/* ------------------ ANALYZE SKILLS (CSV) ------------------ */
 
-    // 1. Check if job title exists in our local map
-    if (skillDatabase[jobTitleInput]) {
-        const requiredSkills = skillDatabase[jobTitleInput];
-        
-        // Find missing skills
-        const missing = requiredSkills.filter(skill => !userSkills.includes(skill));
-        const matchedCount = requiredSkills.length - missing.length;
-        
-        updateUI(missing, matchedCount, requiredSkills.length);
-    } 
-    // 2. Fallback: Dynamic analysis if job is unknown
-    else {
-        handleUnknownJob(userSkills);
+function analyzeSkills() {
+    const jobDomain = document.getElementById('jobTitle').value.trim();
+    const skillsInput = document.getElementById('userSkills').value;
+
+    const userSkills = skillsInput
+        .split(',')
+        .map(s => s.trim())
+        .filter(s => s !== "");
+
+    if (!jobDomain) {
+        alert("Please enter a job domain");
+        return;
     }
+
+    fetch(`${API}/analyze-skills`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + localStorage.getItem("access_token")
+        },
+        body: JSON.stringify({
+            job_domain: jobDomain,
+            skills: userSkills
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+
+        updateUI(
+            data.missing_skills,
+            data.known_skills,
+            data.total_required_skills,
+            data.progress_percentage,
+            data.roadmap
+        );
+    
+      saveProgress(data.job_domain, data.progress_percentage);
+    });
 }
 
-/**
- * Updates the Visual Dashboard
- */
-function updateUI(missing, matched, total) {
-    const percent = Math.round((matched / total) * 100);
+/* ------------------ UPDATE DASHBOARD UI ------------------ */
 
-    // Update Missing Skills Tags
+function updateUI(missing, matched, total, percent, roadmap) {
+
+    /* Missing Skills */
     const container = document.getElementById('missingSkillsContainer');
+
     if (missing.length > 0) {
-        container.innerHTML = missing.map(s => `<span class="skill-tag">${s.toUpperCase()}</span>`).join('');
+        container.innerHTML = missing
+            .map(skill => `<span class="skill-tag">${skill.toUpperCase()}</span>`)
+            .join("");
     } else {
-        container.innerHTML = `<p style="color: #4cc9f0;">✨ You have all the core skills for this role!</p>`;
+        container.innerHTML =
+            `<p style="color:#4cc9f0;">✨ You already meet all required skills!</p>`;
     }
 
-    // Update Chart
+    /* Update Chart */
     progressChart.data.datasets[0].data = [percent, 100 - percent];
     progressChart.update();
-    
-    // Update Percentage Label
-    document.getElementById('chart-label').innerText = percent + "%";
 
-    // Update Suggested Courses
-    const list = document.getElementById('courseList');
+    /* Percentage Label */
+    document.getElementById("chart-label").innerText = percent + "%";
+
+    /* Suggested Learning Roadmap */
+    const list = document.getElementById("courseList");
+
     if (missing.length > 0) {
-        list.innerHTML = missing.slice(0, 3).map(s => 
-            `<li>🚀 <strong>Skillupgrade Path:</strong> ${s.charAt(0).toUpperCase() + s.slice(1)} Mastery</li>`
-        ).join('');
+        list.innerHTML = Object.keys(roadmap)
+            .slice(0, 3)
+            .map(skill =>
+                `<li>🚀 <strong>SkillUpgrade Path:</strong> ${roadmap[skill]}</li>`
+            )
+            .join("");
     } else {
-        list.innerHTML = `<li>🏆 Recommended: Advanced Leadership & Strategy</li>`;
+        list.innerHTML =
+            `<li>🏆 Recommended: Advanced Industry Projects & Leadership Skills</li>`;
     }
 }
 
-/**
- * Fallback for jobs not in the local "database"
- */
-function handleUnknownJob(userSkills) {
-    // If the job isn't recognized, we simulate a "generic" requirement 
-    // or notify the user. Here, we'll suggest common industry gaps.
-    const genericGaps = ["System Design", "Cloud Architecture", "Agile Methodology"];
-    const filteredGaps = genericGaps.filter(s => !userSkills.includes(s.toLowerCase()));
-    
-    alert("Title not in local database. Showing general industry standard gaps for high-level roles.");
-    updateUI(filteredGaps, userSkills.length, userSkills.length + filteredGaps.length);
+function saveProgress(skill, progress) {
+    fetch(`${API}/save-progress`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + localStorage.getItem("access_token")
+        },
+        body: JSON.stringify({
+            skill: skill,
+            progress: progress
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("Progress saved:", data);
+    })
+    .catch(err => {
+        console.error("Save progress failed", err);
+    });
 }

@@ -1,61 +1,159 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>Register | Skillupgrade</title>
+
     <link rel="stylesheet" href="css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap"
+          rel="stylesheet">
+
 </head>
+
 <body>
 
-    <nav class="navbar">
-        <div class="nav-left">
-            <div class="logo">Skill<span>upgrade</span></div>
-            <button onclick="location.href='index.html'" class="btn-home">🏠 Home</button>
-        </div>
-        <div class="nav-right">
-            <label class="theme-switch">
-                <input type="checkbox" id="theme-toggle">
-                <span class="slider"></span>
-            </label>
-        </div>
-    </nav>
 
-    <div class="login-container">
-        <div class="login-card">
-            <div class="auth-header">
-                <h2>Join Us</h2>
-                <p>Start your journey to mastering new skills today.</p>
-            </div>
+<!-- ================= NAVBAR ================= -->
 
-            <form onsubmit="window.location.href='login.html'; alert('Account Created! Please Login.'); return false;">
-                <div class="input-group">
-                    <label>Full Name</label>
-                    <input type="text" placeholder="John Doe" required>
-                </div>
-                <div class="input-group">
-                    <label>Email Address</label>
-                    <input type="email" placeholder="email@example.com" required>
-                </div>
-                <div class="input-group">
-                    <label>Password</label>
-                    <input type="password" placeholder="••••••••" required>
-                </div>
-                <div class="input-group">
-                    <label>Confirm Password</label>
-                    <input type="password" placeholder="••••••••" required>
-                </div>
-                <button type="submit" class="btn-auth">Register Now</button>
-            </form>
+<nav class="navbar">
 
-            <div class="auth-footer">
-                <p>Already have an account? <a href="login.html">Sign In</a></p>
-            </div>
+    <div class="nav-left">
+
+        <div class="logo">
+            Skill<span>upgrade</span>
         </div>
+
+        <button
+            onclick="location.href='index.html'"
+            class="btn-home">
+
+            🏠 Home
+
+        </button>
+
     </div>
 
-    <script src="js/theme.js"></script>
-    <script src="js/api.js"></script>
+
+    <div class="nav-right">
+
+        <label class="theme-switch">
+
+            <input
+                type="checkbox"
+                id="theme-toggle">
+
+            <span class="slider"></span>
+
+        </label>
+
+    </div>
+
+</nav>
+
+
+
+<!-- ================= REGISTER CARD ================= -->
+
+<div class="login-container">
+
+    <div class="login-card">
+
+        <div class="auth-header">
+
+            <h2>Join Us</h2>
+
+            <p>
+                Start your journey to mastering new skills today.
+            </p>
+
+        </div>
+
+
+        <!-- ✅ IMPORTANT FORM -->
+
+        <form onsubmit="register(); return false;">
+
+            <div class="input-group">
+
+                <label>Full Name</label>
+
+                <input
+                    id="name"
+                    type="text"
+                    placeholder="John Doe"
+                    required>
+
+            </div>
+
+
+            <div class="input-group">
+
+                <label>Email Address</label>
+
+                <input
+                    id="email"
+                    type="email"
+                    placeholder="email@example.com"
+                    required>
+
+            </div>
+
+
+            <div class="input-group">
+
+                <label>Password</label>
+
+                <input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    required>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="btn-auth">
+
+                Register Now
+
+            </button>
+
+        </form>
+
+
+        <div class="auth-footer">
+
+            <p>
+
+                Already have an account?
+
+                <a href="login.html">
+                    Sign In
+                </a>
+
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ================= SCRIPTS ================= -->
+
+<script src="js/theme.js"></script>
+
+<script src="js/api.js"></script>
+
+
 </body>
 </html>

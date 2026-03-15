@@ -4,11 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | Skillupgrade</title>
+
+    <!-- Styles -->
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Inline styles (kept as-is) -->
     <style>
-        /* Essential inline styles for the chart positioning */
         .chart-container {
             position: relative;
             margin: auto;
@@ -38,153 +43,98 @@
         }
     </style>
 </head>
+
 <body>
 
-    <nav class="navbar">
-        <div class="nav-left">
-            <div class="logo">Skill<span>upgrade</span></div>
-            <button onclick="location.href='index.html'" class="btn-home">🏠 Home</button>
-        </div>
-        
-        <div class="nav-right">
-            <label class="theme-switch">
-                <input type="checkbox" id="theme-toggle">
-                <span class="slider"></span>
-            </label>
-            <div class="user-profile">
-                <span>Welcome, Learner</span>
-                <div class="avatar"></div>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container">
-        <aside class="input-panel">
-            <h3>Analyze Skills</h3>
-            <p style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 20px;">Enter your target role to see the gap.</p>
-            
-            <div class="input-group">
-                <label>Job Domain</label>
-                <input type="text" id="domain" placeholder="e.g. Technology">
-            </div>
-            <div class="input-group">
-                <label>Target Job Title</label>
-                <input type="text" id="jobTitle" placeholder="e.g. Data Scientist">
-            </div>
-            <div class="input-group">
-                <label>Your Current Skills</label>
-                <textarea id="userSkills" placeholder="Enter skills (e.g. Python, SQL, HTML)"></textarea>
-            </div>
-            <button onclick="analyzeSkills()" class="btn-analyze">Identify Gaps →</button>
-        </aside>
-
-        <main class="dashboard-content">
-            <div class="top-row">
-                <div class="card chart-card">
-                    <h4>Readiness Score</h4>
-                    <div class="chart-container">
-                        <canvas id="progressChart"></canvas>
-                        <div id="chart-label">0%</div>
-                    </div>
-                </div>
-
-                <div class="card status-card">
-                    <h4>Recommended Path</h4>
-                    <ul id="courseList" class="course-list">
-                        <li class="empty-msg">Enter details to generate your path...</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="card gap-card">
-                <h4>Missing Skills Gap</h4>
-                <div id="missingSkillsContainer" class="skills-tags">
-                    <p style="opacity: 0.5;">Analysis results will appear here...</p>
-                </div>
-            </div>
-        </main>
+<!-- ================= NAVBAR ================= -->
+<nav class="navbar">
+    <div class="nav-left">
+        <div class="logo">Skill<span>upgrade</span></div>
+        <button onclick="location.href='index.html'" class="btn-home">🏠 Home</button>
     </div>
-    <script src = "js/theme.js"></script>
-    <script>
-        // --- 1. Internal Knowledge Base (Independent of DB) ---
-        const skillDatabase = {
-            "data scientist": ["python", "machine learning", "statistics", "sql", "pandas", "tableau"],
-            "frontend developer": ["html", "css", "javascript", "react", "git", "typescript"],
-            "backend developer": ["node.js", "express", "postgresql", "docker", "api design", "python"],
-            "fullstack developer": ["react", "node.js", "mongodb", "javascript", "css", "aws"],
-            "ui/ux designer": ["figma", "prototyping", "user research", "wireframing", "adobe xd"],
-            "cybersecurity analyst": ["networking", "linux", "penetration testing", "siem", "firewalls"]
-        };
+    
+    <div class="nav-right">
+        <label class="theme-switch">
+            <input type="checkbox" id="theme-toggle">
+            <span class="slider"></span>
+        </label>
+        <div class="user-profile">
+            <span>Welcome, Learner</span>
+            <div class="avatar"></div>
+        </div>
+    </div>
+</nav>
 
-        // --- 2. Initialize Chart ---
-        const ctx = document.getElementById('progressChart').getContext('2d');
-        let progressChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Matched', 'Missing'],
-                datasets: [{
-                    data: [0, 100],
-                    backgroundColor: ['#f72585', '#e2e8f0'],
-                    borderWidth: 0
-                }]
-            },
-            options: { 
-                cutout: '82%', 
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } } 
-            }
-        });
+<!-- ================= MAIN CONTAINER ================= -->
+<div class="container">
 
-        // --- 3. Analysis Logic ---
-        function analyzeSkills() {
-            const titleInput = document.getElementById('jobTitle').value.trim().toLowerCase();
-            const rawUserSkills = document.getElementById('userSkills').value.toLowerCase();
-            
-            // Convert user input to array
-            const userSkills = rawUserSkills.split(',').map(s => s.trim()).filter(s => s !== "");
+    <!-- ===== INPUT PANEL ===== -->
+    <aside class="input-panel">
+        <h3>Analyze Skills</h3>
+        <p style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 20px;">
+            Enter your target role to see the gap.
+        </p>
 
-            if (skillDatabase[titleInput]) {
-                const required = skillDatabase[titleInput];
-                const missing = required.filter(s => !userSkills.includes(s));
-                const matchedCount = required.length - missing.length;
-                
-                updateDashboard(missing, matchedCount, required.length);
-            } else {
-                // Default fallback if role isn't in our local DB
-                const genericGaps = ["Project Management", "Cloud Computing", "Communication"];
-                updateDashboard(genericGaps.filter(s => !userSkills.includes(s.toLowerCase())), 1, 4);
-                alert("Role not found in local library. Showing generic industry gaps.");
-            }
-        }
+        <div class="input-group">
+            <label>Job Domain</label>
+            <!-- used by backend -->
+            <input type="text" id="jobTitle" placeholder="e.g. Data Scientist">
+        </div>
 
-        // --- 4. UI Update Logic ---
-        function updateDashboard(missing, matched, total) {
-            const percent = Math.round((matched / total) * 100);
+        <div class="input-group">
+            <label>Your Current Skills</label>
+            <textarea id="userSkills"
+                placeholder="Enter skills (e.g. Python, SQL, HTML)">
+            </textarea>
+        </div>
 
-            // Update Chart
-            progressChart.data.datasets[0].data = [percent, 100 - percent];
-            progressChart.update();
-            document.getElementById('chart-label').innerText = percent + "%";
+        <button onclick="analyzeSkills()" class="btn-analyze">
+            Identify Gaps →
+        </button>
+    </aside>
 
-            // Update Missing Skills Tags
-            const tagContainer = document.getElementById('missingSkillsContainer');
-            if (missing.length > 0) {
-                tagContainer.innerHTML = missing.map(s => `<span class="skill-tag">${s.toUpperCase()}</span>`).join('');
-            } else {
-                tagContainer.innerHTML = `<p style="color: #4cc9f0; font-weight:bold;">✅ You're industry-ready for this role!</p>`;
-            }
+    <!-- ===== DASHBOARD CONTENT ===== -->
+    <main class="dashboard-content">
 
-            // Update Courses
-            const courseList = document.getElementById('courseList');
-            if (missing.length > 0) {
-                courseList.innerHTML = missing.map(s => 
-                    `<li>🚀 <strong>Upgrade:</strong> ${s.charAt(0).toUpperCase() + s.slice(1)} Certification</li>`
-                ).join('');
-            } else {
-                courseList.innerHTML = `<li>💎 <strong>Elite Path:</strong> Advanced Leadership & Strategy</li>`;
-            }
-        }
-    </script>
+        <div class="top-row">
+
+            <!-- Progress Chart -->
+            <div class="card chart-card">
+                <h4>Readiness Score</h4>
+                <div class="chart-container">
+                    <canvas id="progressChart"></canvas>
+                    <div id="chart-label">0%</div>
+                </div>
+            </div>
+
+            <!-- Recommended Path -->
+            <div class="card status-card">
+                <h4>Recommended Path</h4>
+                <ul id="courseList" class="course-list">
+                    <li class="empty-msg">
+                        Enter details to generate your path...
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+
+        <!-- Missing Skills -->
+        <div class="card gap-card">
+            <h4>Missing Skills Gap</h4>
+            <div id="missingSkillsContainer" class="skills-tags">
+                <p style="opacity: 0.5;">
+                    Analysis results will appear here...
+                </p>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ================= SCRIPTS ================= -->
+<script src="js/theme.js"></script>
+<script src="js/dashboard.js"></script>
+
 </body>
 </html>
