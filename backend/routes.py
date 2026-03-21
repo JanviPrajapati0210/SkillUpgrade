@@ -1,13 +1,19 @@
-
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import (
     create_access_token,
     jwt_required,
     get_jwt_identity
 )
-from werkzeug.security import generate_password_hash, check_password_hash
+
+from werkzeug.security import (
+    generate_password_hash,
+    check_password_hash
+)
+
 from db import get_db_connection
+
 from skill_analysis import analyze_skills
+
 
 api = Blueprint("api", __name__)
 
@@ -16,7 +22,9 @@ api = Blueprint("api", __name__)
 
 @api.route("/register", methods=["POST"])
 def register():
+
     try:
+
         data = request.get_json()
 
         email = data.get("email")
@@ -58,6 +66,7 @@ def register():
 
 @api.route("/login", methods=["POST"])
 def login():
+
     try:
 
         data = request.get_json()
@@ -81,14 +90,17 @@ def login():
         if not user:
             return jsonify({"error": "Invalid login"}), 401
 
-        if not check_password_hash(user["password"], password):
+        if not check_password_hash(
+            user["password"],
+            password
+        ):
             return jsonify({"error": "Invalid login"}), 401
 
         token = create_access_token(identity=email)
 
         return jsonify({
             "access_token": token
-        }), 200
+        })
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -117,13 +129,13 @@ def profile():
         cursor.close()
         conn.close()
 
-        return jsonify(user), 200
+        return jsonify(user)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-# ------------------ GET USERS ------------------
+# ------------------ USERS ------------------
 
 @api.route("/users", methods=["GET"])
 @jwt_required()
@@ -132,7 +144,9 @@ def users():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT id,email FROM users")
+    cursor.execute(
+        "SELECT id,email FROM users"
+    )
 
     data = cursor.fetchall()
 
@@ -141,11 +155,11 @@ def users():
 
     return jsonify(data)
 
-# ------------------ ANALYZE SKILLS ------------------
 
+# ------------------ ANALYZE SKILLS ------------------
 @api.route("/analyze-skills", methods=["POST"])
 @jwt_required()
-def analyze_skills_route():
+def analyze_user_skills():
 
     try:
 
@@ -153,6 +167,7 @@ def analyze_skills_route():
 
         job_domain = data.get("job_domain")
         skills = data.get("skills")
+        level = data.get("level")
 
         email = get_jwt_identity()
 
@@ -168,44 +183,69 @@ def analyze_skills_route():
         user = cursor.fetchone()
 
         if not user:
-            return jsonify({"error": "User not found"}), 404
+            return jsonify(
+                {"error": "User not found"}
+            ), 404
 
         user_id = user["id"]
 
-        # save domain
+        # ✅ check if domain exists
         cursor.execute(
-            """
-            INSERT INTO user_domains(user_id,job_domain)
-            VALUES(%s,%s)
-            """,
-            (user_id, job_domain)
+            "SELECT * FROM user_domains WHERE user_id=%s",
+            (user_id,)
         )
+
+        existing = cursor.fetchone()
+
+        if existing:
+
+            cursor.execute(
+                """
+                UPDATE user_domains
+                SET job_domain=%s
+                WHERE user_id=%s
+                """,
+                (job_domain, user_id)
+            )
+
+        else:
+
+            cursor.execute(
+                """
+                INSERT INTO user_domains
+                (user_id, job_domain)
+                VALUES (%s,%s)
+                """,
+                (user_id, job_domain)
+            )
 
         conn.commit()
 
-        # ✅ FIX HERE
-        missing, progress = analyze_skills(
+        # analyze skills
+        missing, progress, roadmap = analyze_skills(
             skills,
-            job_domain
+            job_domain,
+            level
         )
 
         cursor.close()
         conn.close()
 
         return jsonify({
+
             "job_domain": job_domain,
             "missing_skills": missing,
-            "known_skills": 0,
-            "total_required_skills": 0,
-            "progress_percentage": progress,
-            "roadmap": {}
+            "progress": progress,
+            "roadmap": roadmap
+
         })
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
+        return jsonify(
+            {"error": str(e)}
+        ), 500
+    
 # ------------------ SAVE PROGRESS ------------------
-
 @api.route("/save-progress", methods=["POST"])
 @jwt_required()
 def save_progress():
@@ -222,6 +262,7 @@ def save_progress():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
+        # get user id
         cursor.execute(
             "SELECT id FROM users WHERE email=%s",
             (email,)
@@ -230,25 +271,77 @@ def save_progress():
         user = cursor.fetchone()
 
         if not user:
-            return jsonify({"error": "User not found"}), 404
+            return jsonify(
+                {"error": "User not found"}
+            ), 404
 
         user_id = user["id"]
 
+        # ✅ check if progress already exists
         cursor.execute(
             """
-            INSERT INTO user_progress
-            (user_id, skill_name, progress)
-            VALUES (%s,%s,%s)
+            SELECT * FROM user_progress
+            WHERE user_id=%s AND skill_name=%s
             """,
-            (user_id, skill, progress)
+            (user_id, skill)
         )
+
+        existing = cursor.fetchone()
+
+        if existing:
+
+            # ✅ UPDATE old row
+            cursor.execute(
+                """
+                UPDATE user_progress
+                SET progress=%s
+                WHERE user_id=%s AND skill_name=%s
+                """,
+                (progress, user_id, skill)
+            )
+
+        else:
+
+            # ✅ INSERT new row
+            cursor.execute(
+                """
+                INSERT INTO user_progress
+                (user_id, skill_name, progress)
+                VALUES (%s,%s,%s)
+                """,
+                (user_id, skill, progress)
+            )
 
         conn.commit()
 
         cursor.close()
         conn.close()
 
-        return jsonify({"message": "Progress saved"})
+        return jsonify({
+            "message": "Progress saved"
+        })
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify(
+            {"error": str(e)}
+        ), 500
+    
+# ------------------ LOGOUT ------------------
+
+@api.route("/logout", methods=["POST"])
+@jwt_required()
+def logout():
+
+    try:
+
+        # JWT logout normally handled in frontend
+        # here we just return success
+
+        return jsonify({
+            "message": "Logged out successfully"
+        })
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500
