@@ -1,5 +1,5 @@
-/* ------------------ CHART INIT ------------------ */
 
+/* ------------------ CHART INIT ------------------ */
 const ctx = document
     .getElementById('progressChart')
     .getContext('2d');
