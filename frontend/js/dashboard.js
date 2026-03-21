@@ -1,8 +1,9 @@
-const API = "http://127.0.0.1:5000/api";
-
 /* ------------------ CHART INIT ------------------ */
 
-const ctx = document.getElementById('progressChart').getContext('2d');
+const ctx = document
+    .getElementById('progressChart')
+    .getContext('2d');
+
 let progressChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
@@ -21,35 +22,67 @@ let progressChart = new Chart(ctx, {
     }
 });
 
-/* ------------------ ANALYZE SKILLS (CSV) ------------------ */
+
+/* ------------------ ANALYZE SKILLS ------------------ */
 
 function analyzeSkills() {
-    const jobDomain = document.getElementById('jobTitle').value.trim();
-    const skillsInput = document.getElementById('userSkills').value;
+
+    const jobDomain =
+        document
+        .getElementById('jobTitle')
+        .value.trim();
+
+    const skillsInput =
+        document
+        .getElementById('userSkills')
+        .value;
+
+    const level =
+        document
+        .getElementById('difficultyLevel').value;
+
 
     const userSkills = skillsInput
         .split(',')
         .map(s => s.trim())
         .filter(s => s !== "");
 
+
     if (!jobDomain) {
         alert("Please enter a job domain");
         return;
     }
 
+
     fetch(`${API}/analyze-skills`, {
+
         method: "POST",
+
         headers: {
+
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + localStorage.getItem("access_token")
+
+            "Authorization":
+                "Bearer " +
+                localStorage.getItem("access_token")
         },
+
         body: JSON.stringify({
+
             job_domain: jobDomain,
-            skills: userSkills
+
+            skills: userSkills,
+
+            level: level
+
         })
+
     })
+
     .then(res => res.json())
+
     .then(data => {
+
         if (data.error) {
             alert(data.error);
             return;
@@ -57,72 +90,170 @@ function analyzeSkills() {
 
         updateUI(
             data.missing_skills,
-            data.known_skills,
-            data.total_required_skills,
-            data.progress_percentage,
+            data.progress,
             data.roadmap
         );
-    
-      saveProgress(data.job_domain, data.progress_percentage);
+
+        saveProgress(
+            data.job_domain,
+            data.progress
+        );
+
     });
+
 }
 
-/* ------------------ UPDATE DASHBOARD UI ------------------ */
 
-function updateUI(missing, matched, total, percent, roadmap) {
+/* ------------------ UPDATE UI ------------------ */
+
+function updateUI(
+    missing,
+    percent,
+    roadmap
+) {
 
     /* Missing Skills */
-    const container = document.getElementById('missingSkillsContainer');
+
+    const container =
+        document.getElementById(
+            'missingSkillsContainer'
+        );
+
 
     if (missing.length > 0) {
-        container.innerHTML = missing
-            .map(skill => `<span class="skill-tag">${skill.toUpperCase()}</span>`)
-            .join("");
-    } else {
+
         container.innerHTML =
-            `<p style="color:#4cc9f0;">✨ You already meet all required skills!</p>`;
-    }
-
-    /* Update Chart */
-    progressChart.data.datasets[0].data = [percent, 100 - percent];
-    progressChart.update();
-
-    /* Percentage Label */
-    document.getElementById("chart-label").innerText = percent + "%";
-
-    /* Suggested Learning Roadmap */
-    const list = document.getElementById("courseList");
-
-    if (missing.length > 0) {
-        list.innerHTML = Object.keys(roadmap)
-            .slice(0, 3)
+            missing
             .map(skill =>
-                `<li>🚀 <strong>SkillUpgrade Path:</strong> ${roadmap[skill]}</li>`
+                `<span class="skill-tag">
+                    ${skill.toUpperCase()}
+                 </span>`
             )
             .join("");
-    } else {
-        list.innerHTML =
-            `<li>🏆 Recommended: Advanced Industry Projects & Leadership Skills</li>`;
+
     }
+    else {
+
+        container.innerHTML =
+            `<p style="color:#4cc9f0;">
+            ✨ You already meet all required skills!
+            </p>`;
+    }
+
+
+    /* Chart */
+
+    progressChart
+        .data
+        .datasets[0]
+        .data = [
+            percent,
+            100 - percent
+        ];
+
+    progressChart.update();
+
+
+    document
+        .getElementById("chart-label")
+        .innerText =
+        percent + "%";
+
+
+    /* Course Roadmap */
+
+    const list =
+        document.getElementById(
+            "courseList"
+        );
+
+
+    if (missing.length > 0) {
+
+        list.innerHTML =
+            Object.keys(roadmap)
+            .slice(0, 5)
+            .map(skill => {
+
+                const course =
+                    roadmap[skill];
+
+                return `
+                <li>
+                🚀 <b>${skill}</b> →
+                <a href="${course.link}"
+                   target="_blank">
+                   ${course.title}
+                </a>
+                </li>
+                `;
+
+            })
+            .join("");
+
+    }
+    else {
+
+        list.innerHTML =
+            `<li>
+            🏆 Recommended:
+            Advanced Industry Projects
+            </li>`;
+    }
+
 }
 
-function saveProgress(skill, progress) {
+
+/* ------------------ SAVE PROGRESS ------------------ */
+
+function saveProgress(
+    skill,
+    progress
+) {
+
     fetch(`${API}/save-progress`, {
+
         method: "POST",
+
         headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + localStorage.getItem("access_token")
+
+            "Content-Type":
+                "application/json",
+
+            "Authorization":
+                "Bearer " +
+                localStorage.getItem(
+                    "access_token"
+                )
         },
+
         body: JSON.stringify({
+
             skill: skill,
+
             progress: progress
         })
+
     })
+
     .then(res => res.json())
+
     .then(data => {
-        console.log("Progress saved:", data);
+
+        console.log(
+            "Progress saved:",
+            data
+        );
+
     })
+
     .catch(err => {
-        console.error("Save progress failed", err);
+
+        console.error(
+            "Save progress failed",
+            err
+        );
+
     });
+
 }

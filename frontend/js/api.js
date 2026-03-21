@@ -140,15 +140,47 @@ function register() {
 
 function logout() {
 
-    localStorage.removeItem(
-        "access_token"
-    );
+    const token = getToken();
 
-    window.location.href =
-        "login.html";
+    fetch(`${API}/logout`, {
+
+        method: "POST",
+
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+
+    })
+
+    .then(res => res.json())
+
+    .then(data => {
+
+        console.log(data);
+
+        localStorage.removeItem(
+            "access_token"
+        );
+
+        window.location.href =
+            "login.html";
+
+    })
+
+    .catch(err => {
+
+        console.error(err);
+
+        localStorage.removeItem(
+            "access_token"
+        );
+
+        window.location.href =
+            "login.html";
+
+    });
 
 }
-
 
 
 /* ================= GET TOKEN ================= */

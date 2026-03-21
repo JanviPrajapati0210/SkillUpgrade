@@ -12,7 +12,7 @@ CREATE TABLE users (
 -- user domain
 CREATE TABLE user_domains (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT,
+    user_id INT UNIQUE,
     job_domain VARCHAR(100),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -24,8 +24,9 @@ CREATE TABLE user_progress (
     skill_name VARCHAR(100),
     progress INT DEFAULT 0,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE(user_id, skill_name),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
-
 
 
