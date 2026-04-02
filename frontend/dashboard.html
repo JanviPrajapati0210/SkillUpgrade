@@ -47,7 +47,6 @@
 
 <body>
 
-
 <!-- NAVBAR -->
 
 <nav class="navbar">
@@ -61,30 +60,25 @@
         <button
             onclick="location.href='index.html'"
             class="btn-home">
-
             🏠 Home
-
         </button>
 
     </div>
 
     <div class="nav-right">
 
-    <label class="theme-switch">
-        <input type="checkbox" id="theme-toggle">
-        <span class="slider"></span>
-    </label>
+        <label class="theme-switch">
+            <input type="checkbox" id="theme-toggle">
+            <span class="slider"></span>
+        </label>
 
         <div class="user-profile">
             <span>Welcome, Learner</span>
-            
             <div class="avatar"></div>
         </div>
 
+        <button onclick="logout()" class="btn-logout">Logout</button>
 
-    <!-- LOGOUT BUTTON -->
-
-    <button onclick="logout()" class="btn-logout">Logout</button>
     </div>
 
 </nav>
@@ -94,173 +88,107 @@
 
 <div class="container">
 
-
 <!-- INPUT PANEL -->
 
 <aside class="input-panel">
 
     <h3>Analyze Skills</h3>
 
-    <p
-        style="
-        font-size:0.8rem;
-        opacity:0.7;
-        margin-bottom:20px;">
-
+    <p style="font-size:0.8rem; opacity:0.7; margin-bottom:20px;">
         Enter your target role to see the gap.
-
     </p>
 
-
     <!-- Job Domain -->
-
     <div class="input-group">
-
         <label>Job Domain</label>
-
         <input
             type="text"
             id="jobTitle"
             placeholder="e.g. Data Scientist">
-
     </div>
 
-
-
     <!-- Skills -->
-
     <div class="input-group">
-
         <label>Your Current Skills</label>
-
         <textarea
             id="userSkills"
             placeholder="Enter skills (e.g. Python, SQL, HTML)">
         </textarea>
-
     </div>
 
-
-
-    <!-- NEW Difficulty Level -->
-
+    <!-- Difficulty Level -->
     <div class="input-group">
-
         <label>Difficulty Level</label>
-
         <select id="difficultyLevel">
 
-            <option value="beginner">
-                Beginner
-            </option>
-
-            <option value="intermediate">
-                Intermediate
-            </option>
-
-            <option value="advanced">
-                Advanced
-            </option>
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
 
         </select>
-
     </div>
 
-
-
-    <button
-        onclick="analyzeSkills()"
-        class="btn-analyze">
-
+    <button onclick="analyzeSkills()" class="btn-analyze">
         Identify Gaps →
-
     </button>
 
 </aside>
-
 
 
 <!-- DASHBOARD -->
 
 <main class="dashboard-content">
 
-
 <div class="top-row">
 
+    <!-- Chart -->
+    <div class="card chart-card">
+        <h4>Readiness Score</h4>
 
-<!-- Chart -->
+        <div class="chart-container">
+            <canvas id="progressChart"></canvas>
+            <div id="chart-label">0%</div>
+        </div>
+    </div>
 
-<div class="card chart-card">
+    <!-- Roadmap -->
+    <div class="card status-card">
+        <h4>🚀 Learning Roadmap</h4>
 
-    <h4>Readiness Score</h4>
-
-    <div class="chart-container">
-
-        <canvas id="progressChart"></canvas>
-
-        <div id="chart-label">0%</div>
-
+        <ul id="courseList" class="course-list">
+            <li class="empty-msg">
+                Enter details to generate your roadmap...
+            </li>
+        </ul>
     </div>
 
 </div>
-
-
-
-<!-- Courses -->
-
-<div class="card status-card">
-
-    <h4>Recommended Path</h4>
-
-    <ul
-        id="courseList"
-        class="course-list">
-
-        <li class="empty-msg">
-
-            Enter details to generate your path...
-
-        </li>
-
-    </ul>
-
-</div>
-
-</div>
-
 
 
 <!-- Missing Skills -->
-
 <div class="card gap-card">
+    <h4>🔴 Missing Skills</h4>
 
-    <h4>Missing Skills Gap</h4>
-
-    <div
-        id="missingSkillsContainer"
-        class="skills-tags">
-
+    <div id="missingSkillsContainer" class="skills-tags">
         <p style="opacity:0.5;">
-
             Analysis results will appear here...
-
         </p>
-
     </div>
+</div>
 
+
+<!-- Existing Skill Recommendations -->
+<div class="card gap-card upgrade-section">
+    <h4>🟢 Upgrade Your Skills</h4>
+    <div id="existingCourses"></div>
 </div>
 
 
 </main>
 
-</div>
-
-
-
 <script src="js/theme.js"></script>
 <script src="js/api.js"></script>
 <script src="js/dashboard.js"></script>
-
 
 </body>
 </html>
