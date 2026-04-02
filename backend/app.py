@@ -5,34 +5,28 @@ from dotenv import load_dotenv
 import os
 
 # ------------------ LOAD ENV ------------------
-
 load_dotenv()
 
 # ------------------ CREATE APP ------------------
-
 app = Flask(__name__)
 
 # ------------------ CONFIG ------------------
-
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = int(
     os.getenv("JWT_ACCESS_TOKEN_EXPIRES", 3600)
 )
 
 # ------------------ ENABLE CORS ------------------
-
 CORS(app, supports_credentials=True)
 
 # ------------------ INIT JWT ------------------
-
 jwt = JWTManager(app)
 
-# ------------------ REGISTER BLUEPRINT ------------------
-
+# ------------------ REGISTER ROUTES ------------------
 from routes import api
 app.register_blueprint(api, url_prefix="/api")
 
-# ------------------ JWT ERROR HANDLERS ------------------
+# ------------------ JWT ERRORS ------------------
 
 @jwt.expired_token_loader
 def expired_token_callback(jwt_header, jwt_payload):
@@ -49,7 +43,7 @@ def missing_token_callback(error):
     return jsonify({"error": "Authorization token is missing"}), 401
 
 
-# ------------------ GLOBAL ERROR HANDLERS ------------------
+# ------------------ GLOBAL ERRORS ------------------
 
 @app.errorhandler(404)
 def not_found(error):
@@ -66,11 +60,11 @@ def server_error(error):
 @app.route("/")
 def home():
     return jsonify({
-        "message": "SkillUpgrade Backend Running Successfully"
+        "message": "SkillUpgrade Backend with ML Running 🚀"
     })
 
 
-# ------------------ RUN SERVER ------------------
+# ------------------ RUN ------------------
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

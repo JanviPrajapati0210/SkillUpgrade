@@ -1,6 +1,13 @@
 const API = "http://127.0.0.1:5000/api";
 
 
+/* ================= TOKEN ================= */
+
+function getToken() {
+    return localStorage.getItem("access_token");
+}
+
+
 /* ================= LOGIN ================= */
 
 function login() {
@@ -13,18 +20,14 @@ function login() {
 
 
     fetch(`${API}/login`, {
-
         method: "POST",
-
         headers: {
             "Content-Type": "application/json"
         },
-
         body: JSON.stringify({
             email: email,
             password: password
         })
-
     })
 
     .then(res => res.json())
@@ -33,7 +36,6 @@ function login() {
 
         if (data.access_token) {
 
-            // save token
             localStorage.setItem(
                 "access_token",
                 data.access_token
@@ -41,31 +43,19 @@ function login() {
 
             alert("Login successful");
 
-            window.location.href =
-                "dashboard.html";
+            window.location.href = "dashboard.html";
 
+        } else {
+
+            alert(data.error || "Login failed");
         }
-
-        else {
-
-            alert(
-                data.error || "Login failed"
-            );
-
-        }
-
     })
 
     .catch(err => {
-
         console.error(err);
-
         alert("Server error");
-
     });
-
 }
-
 
 
 /* ================= REGISTER ================= */
@@ -83,21 +73,15 @@ function register() {
 
 
     fetch(`${API}/register`, {
-
         method: "POST",
-
         headers: {
             "Content-Type": "application/json"
         },
-
         body: JSON.stringify({
-
             name: name,
             email: email,
             password: password
-
         })
-
     })
 
     .then(res => res.json())
@@ -108,87 +92,93 @@ function register() {
 
             alert("Registration successful");
 
-            window.location.href =
-                "login.html";
+            window.location.href = "login.html";
 
+        } else {
+
+            alert(data.error || "Registration failed");
         }
-
-        else {
-
-            alert(
-                data.error ||
-                "Registration failed"
-            );
-
-        }
-
     })
 
     .catch(err => {
-
         console.error(err);
-
         alert("Server error");
-
     });
-
 }
 
+
+/* ================= ANALYZE SKILLS ================= */
+
+function analyzeSkillsAPI(data) {
+
+    return fetch(`${API}/analyze-skills`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + getToken()
+        },
+        body: JSON.stringify(data)
+    }).then(res => res.json());
+}
+
+
+/* ================= ML RECOMMENDATION ================= */
+
+function recommendCoursesAPI(skills) {
+
+    return fetch(`${API}/recommend-courses`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + getToken()
+        },
+        body: JSON.stringify({
+            skills: skills
+        })
+    }).then(res => res.json());
+}
+
+
+/* ================= SAVE PROGRESS ================= */
+
+function saveProgressAPI(skill, progress) {
+
+    return fetch(`${API}/save-progress`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + getToken()
+        },
+        body: JSON.stringify({
+            skill: skill,
+            progress: progress
+        })
+    }).then(res => res.json());
+}
 
 
 /* ================= LOGOUT ================= */
 
 function logout() {
 
-    const token = getToken();
-
     fetch(`${API}/logout`, {
-
         method: "POST",
-
         headers: {
-            "Authorization": "Bearer " + token
+            "Authorization": "Bearer " + getToken()
         }
-
     })
+    .then(() => {
 
-    .then(res => res.json())
+        localStorage.removeItem("access_token");
 
-    .then(data => {
+        alert("Logged out successfully");
 
-        console.log(data);
-
-        localStorage.removeItem(
-            "access_token"
-        );
-
-        window.location.href =
-            "login.html";
-
+        window.location.href = "login.html";
     })
+    .catch(() => {
 
-    .catch(err => {
+        localStorage.removeItem("access_token");
 
-        console.error(err);
-
-        localStorage.removeItem(
-            "access_token"
-        );
-
-        window.location.href =
-            "login.html";
-
+        window.location.href = "login.html";
     });
-
-}
-
-
-/* ================= GET TOKEN ================= */
-
-function getToken() {
-
-    return localStorage.getItem(
-        "access_token"
-    );
-
 }

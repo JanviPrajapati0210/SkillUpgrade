@@ -11,22 +11,41 @@ from werkzeug.security import (
 )
 
 from db import get_db_connection
-
 from skill_analysis import analyze_skills
 
+# ------------------ ML ------------------
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.neighbors import NearestNeighbors
+from course_data import courses
 
 api = Blueprint("api", __name__)
 
+# ------------------ ML SETUP ------------------
 
-# ------------------ REGISTER ------------------
+texts = [
+    course["skills"] + " " + course["description"]
+    for course in courses
+]
+
+vectorizer = TfidfVectorizer()
+X = vectorizer.fit_transform(texts)
+
+model = NearestNeighbors(n_neighbors=3, metric='cosine')
+model.fit(X)
+
+# all skills
+all_skills = set()
+for course in courses:
+    for skill in course["skills"].split():
+        all_skills.add(skill.lower())
+
+
+# ------------------ AUTH ------------------
 
 @api.route("/register", methods=["POST"])
 def register():
-
     try:
-
         data = request.get_json()
-
         email = data.get("email")
         password = data.get("password")
 
@@ -36,11 +55,7 @@ def register():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute(
-            "SELECT * FROM users WHERE email=%s",
-            (email,)
-        )
-
+        cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
         if cursor.fetchone():
             return jsonify({"error": "Email exists"}), 409
 
@@ -52,7 +67,6 @@ def register():
         )
 
         conn.commit()
-
         cursor.close()
         conn.close()
 
@@ -62,286 +76,131 @@ def register():
         return jsonify({"error": str(e)}), 500
 
 
-# ------------------ LOGIN ------------------
-
 @api.route("/login", methods=["POST"])
 def login():
-
     try:
-
         data = request.get_json()
-
         email = data.get("email")
         password = data.get("password")
 
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute(
-            "SELECT * FROM users WHERE email=%s",
-            (email,)
-        )
-
+        cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
         user = cursor.fetchone()
 
         cursor.close()
         conn.close()
 
-        if not user:
-            return jsonify({"error": "Invalid login"}), 401
-
-        if not check_password_hash(
-            user["password"],
-            password
-        ):
+        if not user or not check_password_hash(user["password"], password):
             return jsonify({"error": "Invalid login"}), 401
 
         token = create_access_token(identity=email)
 
-        return jsonify({
-            "access_token": token
-        })
+        return jsonify({"access_token": token})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-# ------------------ PROFILE ------------------
+# ------------------ ANALYZE ------------------
 
-@api.route("/profile", methods=["GET"])
-@jwt_required()
-def profile():
-
-    try:
-
-        email = get_jwt_identity()
-
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-
-        cursor.execute(
-            "SELECT id,email FROM users WHERE email=%s",
-            (email,)
-        )
-
-        user = cursor.fetchone()
-
-        cursor.close()
-        conn.close()
-
-        return jsonify(user)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-# ------------------ USERS ------------------
-
-@api.route("/users", methods=["GET"])
-@jwt_required()
-def users():
-
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    cursor.execute(
-        "SELECT id,email FROM users"
-    )
-
-    data = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-
-    return jsonify(data)
-
-
-# ------------------ ANALYZE SKILLS ------------------
 @api.route("/analyze-skills", methods=["POST"])
 @jwt_required()
 def analyze_user_skills():
-
     try:
-
         data = request.get_json()
 
         job_domain = data.get("job_domain")
         skills = data.get("skills")
         level = data.get("level")
 
-        email = get_jwt_identity()
-
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-
-        # get user id
-        cursor.execute(
-            "SELECT id FROM users WHERE email=%s",
-            (email,)
-        )
-
-        user = cursor.fetchone()
-
-        if not user:
-            return jsonify(
-                {"error": "User not found"}
-            ), 404
-
-        user_id = user["id"]
-
-        # ✅ check if domain exists
-        cursor.execute(
-            "SELECT * FROM user_domains WHERE user_id=%s",
-            (user_id,)
-        )
-
-        existing = cursor.fetchone()
-
-        if existing:
-
-            cursor.execute(
-                """
-                UPDATE user_domains
-                SET job_domain=%s
-                WHERE user_id=%s
-                """,
-                (job_domain, user_id)
-            )
-
-        else:
-
-            cursor.execute(
-                """
-                INSERT INTO user_domains
-                (user_id, job_domain)
-                VALUES (%s,%s)
-                """,
-                (user_id, job_domain)
-            )
-
-        conn.commit()
-
-        # analyze skills
         missing, progress, roadmap = analyze_skills(
             skills,
             job_domain,
             level
         )
 
-        cursor.close()
-        conn.close()
-
         return jsonify({
-
-            "job_domain": job_domain,
             "missing_skills": missing,
             "progress": progress,
             "roadmap": roadmap
-
         })
 
     except Exception as e:
-        return jsonify(
-            {"error": str(e)}
-        ), 500
-    
-# ------------------ SAVE PROGRESS ------------------
-@api.route("/save-progress", methods=["POST"])
+        return jsonify({"error": str(e)}), 500
+
+
+# ------------------ ML RECOMMENDATION ------------------
+
+@api.route("/recommend-courses", methods=["POST"])
 @jwt_required()
-def save_progress():
+def recommend_courses():
 
     try:
-
         data = request.get_json()
+        user_input = data.get("skills", "")
 
-        skill = data.get("skill")
-        progress = data.get("progress")
+        skills_list = user_input.split(",")
+        user_skills = set([s.strip().lower() for s in skills_list])
 
-        email = get_jwt_identity()
+        cleaned_input = " ".join(user_skills)
 
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        # -------- Missing Skills --------
+        missing_skills = list(all_skills - user_skills)
 
-        # get user id
-        cursor.execute(
-            "SELECT id FROM users WHERE email=%s",
-            (email,)
-        )
+        # -------- EXISTING SKILLS (ADVANCED - ML) --------
+        existing_recommendations = []
 
-        user = cursor.fetchone()
+        for skill in user_skills:
+            skill_vector = vectorizer.transform([skill])
+            distances, indices = model.kneighbors(skill_vector, n_neighbors=2)
 
-        if not user:
-            return jsonify(
-                {"error": "User not found"}
-            ), 404
+            courses_list = []
+            for i in indices[0]:
+                courses_list.append({
+                    "course_name": courses[i]["course_name"],
+                    "link": courses[i]["link"]
+                })
 
-        user_id = user["id"]
+            existing_recommendations.append({
+                "skill": skill,
+                "recommended_courses": courses_list
+            })
 
-        # ✅ check if progress already exists
-        cursor.execute(
-            """
-            SELECT * FROM user_progress
-            WHERE user_id=%s AND skill_name=%s
-            """,
-            (user_id, skill)
-        )
+        # -------- MISSING SKILLS (LEARNING - ML) --------
+        missing_recommendations = []
 
-        existing = cursor.fetchone()
+        for skill in missing_skills[:5]:
+            skill_vector = vectorizer.transform([skill])
+            distances, indices = model.kneighbors(skill_vector, n_neighbors=2)
 
-        if existing:
+            courses_list = []
+            for i in indices[0]:
+                courses_list.append({
+                    "course_name": courses[i]["course_name"],
+                    "link": courses[i]["link"]
+                })
 
-            # ✅ UPDATE old row
-            cursor.execute(
-                """
-                UPDATE user_progress
-                SET progress=%s
-                WHERE user_id=%s AND skill_name=%s
-                """,
-                (progress, user_id, skill)
-            )
-
-        else:
-
-            # ✅ INSERT new row
-            cursor.execute(
-                """
-                INSERT INTO user_progress
-                (user_id, skill_name, progress)
-                VALUES (%s,%s,%s)
-                """,
-                (user_id, skill, progress)
-            )
-
-        conn.commit()
-
-        cursor.close()
-        conn.close()
+            missing_recommendations.append({
+                "skill": skill,
+                "recommended_courses": courses_list
+            })
 
         return jsonify({
-            "message": "Progress saved"
+            "user_skills": list(user_skills),
+            "missing_skills": missing_skills[:10],
+            "existing_skill_courses": existing_recommendations,
+            "missing_skill_courses": missing_recommendations
         })
 
     except Exception as e:
-        return jsonify(
-            {"error": str(e)}
-        ), 500
+        return jsonify({"error": str(e)}), 500
     
-# ------------------ LOGOUT ------------------
-
+    
 @api.route("/logout", methods=["POST"])
 @jwt_required()
 def logout():
-
-    try:
-
-        # JWT logout normally handled in frontend
-        # here we just return success
-
-        return jsonify({
-            "message": "Logged out successfully"
-        })
-
-    except Exception as e:
-        return jsonify({
-            "error": str(e)
-        }), 500
+    return jsonify({
+        "message": "Logged out successfully"
+    })

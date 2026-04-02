@@ -430,3 +430,134 @@ input:focus { border-color: var(--primary); }
 .btn-logout:hover {
     background: #c1125b;
 }
+
+/* Container */
+.upgrade-skills-container {
+    margin-top: 30px;
+    padding: 20px;
+}
+
+/* Grid Layout */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+/* Card Style */
+.course-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 20px;
+    transition: 0.3s ease;
+    cursor: pointer;
+}
+
+/* Hover Effect */
+.course-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Text */
+.course-card h3 {
+    margin-bottom: 10px;
+    color: var(--text-main);
+}
+
+.course-card p {
+    color: var(--text-dim);
+    font-size: 14px;
+}
+
+/* Button */
+.course-card button {
+    margin-top: 15px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    background: #3b82f6;
+    color: white;
+    cursor: pointer;
+}
+
+.course-card button:hover {
+    background: #2563eb;
+}
+
+.skill-section {
+    margin-bottom: 25px;
+}
+
+.skill-title {
+    margin-bottom: 10px;
+    color: var(--text-main);
+}
+
+/* GRID */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+}
+
+/* CARD */
+.course-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 15px;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.course-card:hover {
+    transform: translateY(-5px);
+}
+
+/* TEXT */
+.course-card h4 {
+    color: var(--text-main);
+    margin-bottom: 8px;
+}
+
+.course-card p {
+    color: var(--text-dim);
+    font-size: 13px;
+}
+
+/* BUTTON */
+.course-card button {
+    margin-top: 10px;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    background: #f72585;
+    color: white;
+    cursor: pointer;
+}
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+}
+
+.course-card {
+    background: var(--card-bg);
+    border-radius: 10px;
+    padding: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.course-card:hover {
+    transform: translateY(-5px);
+}
+
+.course-card h4 {
+    color: var(--text-main);
+    margin-bottom: 5px;
+}
+
+.course-card p {
+    color: var(--text-dim);
+    font-size: 12px;
+}
